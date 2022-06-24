@@ -1,4 +1,7 @@
 #!/bin/bash
+DEBUG=1
+INJECT=0
+RESTORE=0
 
 if [ $# -ne 1 ]; then																		# se il numero di argomenti non e' 1
 	echo "usege: $(basename $0) PATH"														# stampo il comando d'uso (nomescript nomedirectory)
@@ -21,10 +24,6 @@ if [ $1 != 0 ]; then          																# controllo che il comando sia and
 	exit 1
 fi
 }
-
-DEBUG=1
-INJECT=0
-RESTORE=0
 
 inject_file="$(pwd)/$(dirname $0)/dff_run.cpp"
 cd $1
