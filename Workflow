@@ -6,8 +6,6 @@
  cd .../fastflow/tests/distributed/
  CXX=g++-10 make
  # Alternativamente possiamo aggiungere direttamente CXX=g++-10 al Makefile
- DEBUG=1 CXX=g++-10 make
- # Permette di utilizzare un debugger durante l'esecuzione
 ###
 
 #Dalla cartella fastflow/tests/distributed lanciamo i tests insieme con l'eseguibile dff_run

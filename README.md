@@ -2,6 +2,9 @@
 Deployer for "Distributed FastFlow"
   
 Execute script "setup.sh" for download all necessary files or specify where is Fastflow and Cereal directory.  
+	FastFlow and Cereal need to be in the same directory.
   
-Use `INJECT=1 ./setup.sh` to replace "dff_run.ccp" FastFlow original one with the costumized one  
-Use `RESTORE=1 ./setup.sh` to restore official FastFlow "dff_run.cpp"  
+Setup parameters in "setup.sh" in case you need:  
+`DEBUG` to enable the debug in Makefile compilation.  
+`INJECT` to replace "dff_run.ccp" FastFlow original one with the costumized one.  
+`RESTORE` to restore official FastFlow "dff_run.cpp".  
