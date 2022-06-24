@@ -2,7 +2,7 @@
 Deployer for "Distributed FastFlow"
   
 Execute script "setup.sh" for download all necessary files or specify where is Fastflow and Cereal directory.  
-	FastFlow and Cereal need to be in the same directory.
+	(FastFlow and Cereal need to be in the same directory.)	#TODO cen split into two  
   
 Setup parameters in "setup.sh" in case you need:  
 `DEBUG` to enable the debug in Makefile compilation.  
