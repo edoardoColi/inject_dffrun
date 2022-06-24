@@ -1,0 +1,13 @@
+#Per compilare utilizziamo i Makefile cone descritto
+### Questa parte puo essere anche lanciata dallo script
+ cd .../fastflow/ff/distributed/loader
+ CXX=g++-10 make
+ # Alternativamente possiamo aggiungere direttamente CXX=g++-10 al Makefile
+ cd fastflow/tests/distributed/
+ CXX=g++-10 make
+ # Alternativamente possiamo aggiungere direttamente CXX=g++-10 al Makefile
+###
+
+#Dalla cartella fastflow/tests/distributed lanciamo i tests insieme con l'eseguibile dff_run
+../../ff/distributed/loader/dff_run -V -f ./test_group<?>.json ./test_group<?>
+# Nel file test_group<?>.json, relativo all'eseguibile, troviamo i parametri di settaggio per dff_run
