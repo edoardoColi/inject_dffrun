@@ -33,14 +33,14 @@ read yn
 if [ "$yn" != "y" ]; then
 	exit 0
 fi
-sudo apt-get install wget git make															# installo i comandi necessari
+sudo apt-get -y install wget git make														# installo i comandi necessari
 check_error $? "installing dependencies"
 ###
 cereal=cereal-1.3.2
 tar_cereal=v1.3.2.tar.gz
 https_cereal=https://github.com/USCiLab/cereal/archive/refs/tags/${tar_cereal}
 if [ -w $tar_cereal ]; then																	# se il file esiste ed e' scrivibile
-	echo -n " ${yellow}$tar_cereal for Cereal exists, Override? (y/n-default)?${reset} "
+	echo -n " ${yellow}$tar_cereal for Cereal exists, Override? (y/n-default)?${reset}"
 	read yn																					# leggo un carattere dallo standard input
 	if [ "$yn" = "y" ]; then
 		rm -f $tar_cereal;																	# cancelle il vecchio file esistente
@@ -66,26 +66,26 @@ fi
 ff=fastflow
 git_ff=https://github.com/fastflow/${ff}.git
 if [ -d $ff ]; then
-	echo -n " ${yellow}$ff for FastFlow from GitHub exists, Override? (y/n-default)${reset} "
-	read yn																				# leggo un carattere dallo standard input
+	echo -n " ${yellow}$ff for FastFlow from GitHub exists, Override? (y/n-default)${reset}"
+	read yn																					# leggo un carattere dallo standard input
 	if [ "$yn" = "y" ]; then
-		rm -fr $ff;																		# cancelle il vecchio file esistente
-		git clone ${git_ff}																# recupero i file online
+		rm -fr $ff;																			# cancelle il vecchio file esistente
+		git clone ${git_ff}																	# recupero i file online
 		check_error $? "cloning $ff from GitHub repository: $git_ff"
 	fi
 else
-	git clone ${git_ff}																	# recupero i file online
+	git clone ${git_ff}																		# recupero i file online
 	check_error $? "cloning $ff from GitHub repository: $git_ff"
 fi
 cd $ff
 git checkout DistributedFF
 check_error $? "git checkout DistributedFF"
-git pull																				# da eseguire periodicamente
+git pull																					# da eseguire periodicamente
 check_error $? "git pull"
 cd ..
 ###
 #Dettagli su gcc a https://gcc.gnu.org/projects/cxx-status.html
-uname -a | grep Ubuntu &>/dev/null														# controlliamo il sistema dove ci troviamo #TODO e se sono su centos? tutti i comandi che uso vanno bene??
+uname -a | grep Ubuntu &>/dev/null															# controlliamo il sistema dove ci troviamo #TODO e se sono su centos? tutti i comandi che uso vanno bene??
 if [ $? = 0 ]; then
 	ppa=ubuntu-toolchain-r/test
 	sudo add-apt-repository -y ppa:${ppa}
@@ -107,18 +107,30 @@ echo "Alternatively, follow the instructions in .\\Workflow${reset}"
 read yn
 cd fastflow/ff/distributed/loader
 if [ $INJECT = 1 ]; then
-	echo "Injection"
-	mv -fv ./dff_run.cpp ./dff_run.cpp.old 
-	cp -fv $inject_file .
-	echo "DONE"
+	echo
+	echo "-Injection"
+	if [ -f $inject_file ]; then
+		mv -fv ./dff_run.cpp ./dff_run.cpp.old 
+		cp -fv $inject_file .
+		echo "${green}DONE${reset}"
+	else
+		echo "${red}NO FILE(dff_run.cpp) TO INJECT${reset}"
+	fi
 fi
 if [ $RESTORE = 1 ]; then
+	echo
 	echo "-Restore"
 	mv -fv ./dff_run.cpp ./dff_run.cpp.old
 	git checkout ./dff_run.cpp
-	echo "DONE"
+	if [ $? != 0 ]; then
+		mv -fv ./dff_run.cpp.old ./dff_run.cpp
+		echo "${red}CAN'T RESTORE FILE(dff_run.cpp) NOW${reset}"
+	else
+		echo "${green}DONE${reset}"
+	fi
 fi
 if [ $DEBUG = 1 ]; then
+	echo
 	make cleanall
 	DEBUG=1 CXX=g++-10 make
 	make clean
@@ -129,6 +141,7 @@ if [ $DEBUG = 1 ]; then
 		make clean
 	fi
 else
+	make cleanall
 	CXX=g++-10 make
 	make clean
 	if [ "$yn" = "y" ]; then
@@ -138,10 +151,9 @@ else
 	fi
 fi
 
-gnome-terminal &>/dev/null																# le variabili esportate rimangono settate anche nel processo figlio
-echo
-echo "${yellow}Remind to set variables like this:"										# reminder per il processo padre
+gnome-terminal &>/dev/null																	# le variabili esportate rimangono settate anche nel processo figlio
+echo "${yellow}Remind to set variables like this:"											# reminder per il processo padre
 echo "  export FF_HOME=$dir/$ff"
-echo "  export CEREAL_HOME=$dir/$cereal/include"
+echo "  export CEREAL_HOME=$dir/$cereal/include${reset}"
 
 exit 0

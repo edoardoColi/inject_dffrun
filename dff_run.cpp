@@ -1,6 +1,6 @@
 /* Author: 
  *   Nicolo' Tonci
- *   Edoardo Coli  --WorkInProgress--
+ *   Edoardo Coli
  */
 
 #include <iostream>
@@ -10,31 +10,34 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <sys/param.h>
 #include <fcntl.h>
+
 
 #include <cereal/cereal.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 
+
 #include <filesystem>
 namespace n_fs = std::filesystem;
 
 enum Proto {TCP = 1 , MPI};
 
-static inline unsigned long getusec(){			//TODO ??inline
+Proto usedProtocol;
+bool seeAll = false;
+std::vector<std::string> viewGroups;
+char hostname[HOST_NAME_MAX];
+std::string configFile("");
+std::string executable;
+
+
+static inline unsigned long getusec() {
     struct timeval tv;
     gettimeofday(&tv,NULL);
     return (unsigned long)(tv.tv_sec*1e6+tv.tv_usec);
 }
-
-//Variabili Globali
-Proto						usedProtocol;
-bool						seeAll = false;
-std::vector<std::string>	viewGroups;
-char						hostname[100];
-std::string					configFile("");			//TODO assegnazione?
-std::string					executable;
 
 bool toBePrinted(std::string gName){
     return (seeAll || (find(viewGroups.begin(), viewGroups.end(), gName) != viewGroups.end()));
@@ -47,6 +50,7 @@ std::vector<std::string> split (const std::string &s, char delim) {
 
     while (getline (ss, item, delim))
         result.push_back (item);
+
     return result;
 }
 
@@ -55,7 +59,7 @@ struct G {
     int fd = 0;
     FILE* file = nullptr;
 
-    template <class Archive>			//TODO??
+    template <class Archive>
     void load( Archive & ar ){
         ar(cereal::make_nvp("name", name));
         
@@ -93,35 +97,36 @@ struct G {
         fcntl(fd, F_SETFL, flags);
     }
 
-    bool isRemote(){
-		return !(!host.compare("127.0.0.1") || !host.compare("localhost") || !host.compare(hostname));
-	}
+    bool isRemote(){return !(!host.compare("127.0.0.1") || !host.compare("localhost") || !host.compare(hostname));}
 
 
 };
 
-bool allTerminated(std::vector<G>& groups){		//TODO la & come una star (*)?
-    for (G& g: groups)							//TODO come fosse for(G g;G = ilPrimo; groups successivo) -- per ogni g interno a groups
+bool allTerminated(std::vector<G>& groups){
+    for (G& g: groups)
         if (g.file != nullptr)
             return false;
     return true;
 }
 
-static inline void usage(char* progname) {		//TODO ??inline
+static inline void usage(char* progname) {
 	std::cout << "\nUSAGE: " <<  progname << " [Options] -f <configFile> <cmd> \n"
 			  << "Options: \n"
 			  << "\t -v <g1>,...,<g2> \t Prints the output of the specified groups\n"
 			  << "\t -V               \t Print the output of all groups\n"
 			  << "\t -p \"TCP|MPI\"   \t Force communication protocol\n";
+	std::cout << "\n";
 		
 }
 
 std::string generateHostFile(std::vector<G>& parsedGroups){
     std::string name = "/tmp/dffHostfile" + std::to_string(getpid());
+
     std::ofstream tmpFile(name, std::ofstream::out);
   
     for (const G& group : parsedGroups)
         tmpFile << group.host << std::endl;
+
     tmpFile.close();
     // return the name of the temporary file just created; remember to remove it after the usage
     return name;
@@ -129,18 +134,22 @@ std::string generateHostFile(std::vector<G>& parsedGroups){
 
 int main(int argc, char** argv) {
 
-    if (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "-help") == 0 || strcmp(argv[0], "-h") == 0){
-		usage(argv[0]);			//TODO sopra non dovrebbe essere argv[1]?
+    if (argc == 1 ||
+		strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "-h") == 0){
+		usage(argv[0]);
         exit(EXIT_SUCCESS);
     }
 
     // get the hostname
-    gethostname(hostname, 100);
+    if (gethostname(hostname, HOST_NAME_MAX) != 0) {
+		perror("gethostname");
+		exit(EXIT_FAILURE);
+	}
 
 	int optind=0;
 	for(int i=1;i<argc;++i) {
 		if (argv[i][0]=='-') {
-			switch(argv[i][1]) {		//TODO perche non qui il -h ??
+			switch(argv[i][1]) {
             case 'p' : {
                 if (argv[i+1] == NULL) {
                     std::cerr << "-p require a protocol\n";
@@ -176,11 +185,7 @@ int main(int argc, char** argv) {
 				i+=viewGroups.size();
 			} break;
 			}
-		}
-        else {
-            optind=i;
-            break;
-        }
+		} else { optind=i; break;}
 	}
 
 	if (configFile == "") {
@@ -196,10 +201,10 @@ int main(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-    executable += " ";                  //TODO costruisco la stringa
+    executable += " ";
 		
     for (int index = optind+1 ; index < argc; index++) {
-        executable += std::string(argv[index]) + " ";       //TODO perche spazio alla fine?
+        executable += std::string(argv[index]) + " ";
 	}
 	
     std::ifstream is(configFile);
@@ -223,17 +228,15 @@ int main(int argc, char** argv) {
                     usedProtocol = Proto::MPI;
                 else 
                     usedProtocol = Proto::TCP;
-            }
-			catch (cereal::Exception&) {
+            } catch (cereal::Exception&) {
                 ar.setNextName(nullptr);
                 // if the protocol is not specified we assume TCP
                 usedProtocol = Proto::TCP;
             }
 
         // parse all the groups in the configuration file
-        ar(cereal::make_nvp("groups", parsedGroups));           //TODO cosa sto costruendo? sto usando cereal
-    }
-	catch (const cereal::Exception& e){
+        ar(cereal::make_nvp("groups", parsedGroups));
+    } catch (const cereal::Exception& e){
         std::cerr << "Error parsing the JSON config file. Check syntax and structure of  the file and retry!" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -243,7 +246,7 @@ int main(int argc, char** argv) {
             std::cout << "Group: " << g.name << " on host " << g.host << std::endl;
     #endif
 
-    if (usedProtocol == Proto::TCP){				//TODO settato tutto incomicio a mandare??
+    if (usedProtocol == Proto::TCP){
         auto Tstart = getusec();
         for (G& g : parsedGroups)
             g.run();
@@ -273,20 +276,22 @@ int main(int argc, char** argv) {
                 }
             }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(15));         //TODO necessario aspettare?
+        std::this_thread::sleep_for(std::chrono::milliseconds(15));
         }
         std::cout << "Elapsed time: " << (getusec()-(Tstart))/1000 << " ms" << std::endl;
     }
 
-    if (usedProtocol == Proto::MPI){                    //TODO come uso MPI
+    if (usedProtocol == Proto::MPI){
         std::string hostFile = generateHostFile(parsedGroups);
         std::cout << "Hostfile: " << hostFile << std::endl;
         // invoke mpirun using the just created hostfile
 
         char command[350];
      
-        sprintf(command, "mpirun -np %lu --hostfile %s %s --DFF_Config=%s", parsedGroups.size(), hostFile.c_str(), executable.c_str(), configFile.c_str());
+        sprintf(command, "mpirun -np %lu --hostfile %s --map-by node %s --DFF_Config=%s", parsedGroups.size(), hostFile.c_str(), executable.c_str(), configFile.c_str());
 
+		std::cout << "mpicommand: " << command << "\n";
+		
         FILE *fp;
         char buff[1024];
         fp = popen(command, "r");
@@ -302,7 +307,7 @@ int main(int argc, char** argv) {
 
         pclose(fp);
 
-        std::remove(hostFile.c_str());
+        //std::remove(hostFile.c_str());
     }
     
     
