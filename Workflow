@@ -23,7 +23,7 @@
 ../../../ff/distributed/loader/dff_run -V -f ./dwordcount.json ./dwordcountb -f ./testo.txt -p 1,1 -t 1 -b 10
 ##Nel file .json, relativo all'eseguibile, troviamo i parametri di settaggio per dff_run
 
-#Se vogliamo controllare gli eseguibili step-by-spep possiamo usare gdb con il comando
+#Se vogliamo controllare gli eseguibili step-by-step possiamo usare gdb con il comando
 gdb --args .../dff_run -V -f .../config_of_application.json .../application
 
-### '...' notation represent a generic path
+### '...' notation representing a generic path
