@@ -3,12 +3,16 @@ DEBUG=1
 INJECT=0
 RESTORE=0
 
-if [ $# -ne 1 ]; then																		# se il numero di argomenti non e' 1
-	echo "usege: $(basename $0) PATH"														# stampo il comando d'uso (nomescript nomedirectory)
+if [ $# -ne 2 ]; then																		# se il numero di argomenti non e' 2
+	echo "usege: $(basename $0) PATH-FASTFLOW PATH-CREAL"									# stampo il comando d'uso (nomescript nomedirectory)
 	exit 1
 fi
 if [ ! -d $1 ]; then																		# se nomedirectory non e' una directory, stampo un errore
 	echo "$1 is not a directory"
+	exit 1;
+fi
+if [ ! -d $2 ]; then																		# se nomedirectory non e' una directory, stampo un errore
+	echo "$2 is not a directory"
 	exit 1;
 fi
 
@@ -26,9 +30,12 @@ fi
 }
 
 inject_file="$(pwd)/$(dirname $0)/dff_run.cpp"
+tmp=$(pwd)
 cd $1
-dir=$(pwd)
-echo "${yellow}You are going to use \"$dir\" folder, do you want to continue? (y/n-default)${reset}"
+dir_ff=$(pwd)
+cd $tmp/$2
+dir_cereal=$(pwd)
+echo "${yellow}You are going to use \"$dir_ff\" folder for FastFlow and \"$dir_cereal\" folder for Cereal, do you want to continue? (y/n-default)${reset}"
 read yn
 if [ "$yn" != "y" ]; then
 	exit 0
@@ -65,6 +72,7 @@ fi
 ###
 ff=fastflow
 git_ff=https://github.com/fastflow/${ff}.git
+cd $dir_ff
 if [ -d $ff ]; then
 	echo -n " ${yellow}$ff for FastFlow from GitHub exists, Override? (y/n-default)${reset}"
 	read yn																					# leggo un carattere dallo standard input
@@ -99,8 +107,8 @@ else
 	echo "${yellow}Check for gcc version${reset}"
 fi
 ###
-export FF_HOME=$dir/$ff
-export CEREAL_HOME=$dir/$cereal/include
+export FF_HOME=$dir_ff/$ff
+export CEREAL_HOME=$dir_cereal/$cereal/include
 
 echo "${yellow}It might take a while, do you want to use make command for all tests? (y/n-default)"
 echo "Alternatively, follow the instructions in .\\Workflow${reset}"
@@ -153,7 +161,7 @@ fi
 
 gnome-terminal &>/dev/null																	# le variabili esportate rimangono settate anche nel processo figlio
 echo "${yellow}Remind to set variables like this:"											# reminder per il processo padre
-echo "  export FF_HOME=$dir/$ff"
-echo "  export CEREAL_HOME=$dir/$cereal/include${reset}"
+echo "  export FF_HOME=$dir_ff/$ff"
+echo "  export CEREAL_HOME=$dir_cereal/$cereal/include${reset}"
 
 exit 0

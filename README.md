@@ -1,8 +1,7 @@
 # Inject dff_run
 Deployer for "Distributed FastFlow"
   
-Execute script "setup.sh" for download all necessary files to act like Master, and specify where is Fastflow and Cereal directory.  
-	(FastFlow and Cereal need to be in the same directory.)	#TODO can split into two  
+Execute script "setup.sh" for download all necessary files to act like Master, and specify where is Fastflow and Cereal directory.   
   
 Setup parameters inside "setup.sh" in case you need:  
 `DEBUG`to enable the debug in Makefile compilation.  
