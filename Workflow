@@ -1,29 +1,26 @@
-#Per compilare utilizziamo i Makefile come descritto
-#Per le cartelle all'interno di tests/distributed copiare il Makefile all'interno delle cartelle e compilare come il resto dei tests
+# Per compilare utilizziamo i Makefile come descritto
+# Per le cartelle all'interno di tests/distributed copiare il Makefile all'interno delle cartelle e compilare come il resto dei tests
 # (CXX=g++-10 make DEBUG=1 EXCLUDE_MPI=1 dwordcountb) <- /dwordcount
+
 ### Questa parte puo essere anche lanciata dallo script
- cd .../fastflow/ff/distributed/loader
- CXX=g++-10 make
- # Alternativamente possiamo aggiungere direttamente CXX=g++-10 al Makefile
- ##genera il dff_run
  cd .../fastflow/tests/distributed/
  CXX=g++-10 make
  # Alternativamente possiamo aggiungere direttamente CXX=g++-10 al Makefile
- ##genera gli eseguibili dei test
+ # (genera gli eseguibili dei test)
 ###
 
 #Per lanciare un eseguibile utilizziamo dff_run insieme con il programma compilato che usa fastflow e il relativo file json
- ## -V = Verbose
- ## -f = path for json file
+# -V = Verbose
+# -f = path for json file
  .../dff_run -V -f .../config_of_application.json .../application
 
-#Per esempio dalla cartella fastflow/tests/distributed lanciamo gli eseguibili (dopo averlo creato con il make)
-../../ff/distributed/loader/dff_run -V -f ./test_group<?>.json ./test_group<?>
-#Per esempio dalla cartella fastflow/tests/distributed/dwordcount lanciamo l'eseguibile che analizza un file specifico (dopo averlo creato con il make)
-../../../ff/distributed/loader/dff_run -V -f ./dwordcount.json ./dwordcountb -f ./testo.txt -p 1,1 -t 1 -b 10
-##Nel file .json, relativo all'eseguibile, troviamo i parametri di settaggio per dff_run
+# Per esempio dalla cartella fastflow/tests/distributed lanciamo gli eseguibili (dopo averlo creato con il make)
+ ../../ff/distributed/loader/dff_run -V -f ./test_group<?>.json ./test_group<?>
+# Per esempio dalla cartella fastflow/tests/distributed/dwordcount lanciamo l'eseguibile che analizza un file specifico (dopo averlo creato con il make)
+ ../../../ff/distributed/loader/dff_run -V -f ./dwordcount.json ./dwordcountb -f ./testo.txt -p 1,1 -t 1 -b 10
+# Nel file .json, relativo all'eseguibile, troviamo i parametri di settaggio per dff_run
 
 #Se vogliamo controllare gli eseguibili step-by-step possiamo usare gdb con il comando
-gdb --args .../dff_run -V -f .../config_of_application.json .../application
+ gdb --args .../dff_run -V -f .../config_of_application.json .../application
 
 ### '...' notation representing a generic path
