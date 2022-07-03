@@ -47,10 +47,15 @@ fi
 check_dir $2 $working_dir
 check_dir $3 $working_dir
 check_dir $4 $working_dir
-if [ $num_args -ge 5 ]; then
-	check_dir $5 $working_dir #TODO forse non serve il 5 perche e' come il 6
-	#TODO le dir degli altri files
-fi
+iterator=0
+for file in "$@"
+do
+	iterator=$((iterator+1))
+	if [ $iterator -ge 5 ]; then
+		check_dir $file $working_dir
+	fi
+done
+
 
 cd $(dirname "$2")
 path_dffrun=$(pwd)/$(basename "$2")
@@ -64,7 +69,16 @@ path_JSON=$(pwd)/$(basename "$4")
 check_file $path_dffrun
 check_file $path_exec
 check_file $path_JSON
-#TODO controllo che i files esistano (5,6,7,8...) ORA POTEVO controllare solo questo senza la directory?
+iterator=0
+for file in "$@"
+do
+	iterator=$((iterator+1))
+	if [ $iterator -ge 5 ]; then
+		cd "$working_dir"
+		cd $(dirname "$file")
+		check_file $(pwd)/$(basename "$file") $working_dir
+	fi
+done
 
 #OTTIMIZZAZIONE se e' la prima volta scp senno' rsynk (dovrebbe essere piu veloce scp se non ho nulla di gia inserito)
 #faccio un oggetto per volta o tutto insieme una volta copiato tutto in un posto?
@@ -92,4 +106,15 @@ ldd "$path_exec" | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e
 rsync -vL -e "ssh -i ~/opt/fastflow/.ssh/ff_key" $path_dffrun "$1":~/opt/fastflow/
 rsync -vL -e "ssh -i ~/opt/fastflow/.ssh/ff_key" $path_exec "$1":~/opt/fastflow/
 rsync -vL -e "ssh -i ~/opt/fastflow/.ssh/ff_key" $path_JSON "$1":~/opt/fastflow/
-#TODO passare anche gli altri file necessari
+iterator=0
+for file in "$@"
+do
+	iterator=$((iterator+1))
+	if [ $iterator -ge 5 ]; then
+		cd "$working_dir"
+		cd $(dirname "$file")
+		rsync -vL -e "ssh -i ~/opt/fastflow/.ssh/ff_key" $(pwd)/$(basename "$file") "$1":~/opt/fastflow/
+	fi
+done
+
+exit 0
