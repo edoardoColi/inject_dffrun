@@ -1,73 +1,95 @@
 #!/bin/bash
 
 num_args=$#
-if [ $num_args -lt 3 ]; then
-	echo "usage: ./$(basename "$0") [user@]hostname path_of_dffrun path_of_executable [files_for_executable]"
+working_dir=$(pwd)
+if [ $num_args != 1 ] && [ $num_args != 4 ] && [ $num_args -lt 5 ]; then
+	echo "usage: ./$(basename "$0") [user@]hostname [path_dffrun path_executable path_JSONconfig [file_needed...]]"
 	exit 1
 fi
-working_dir=$(pwd)
+
+check_dir()
+{
+cd "$2"
+if [ ! -d $(dirname "$1") ]; then
+	echo "$(dirname "$1") is not an existing directory"
+	exit 1;
+fi
+}
+
+check_file()
+{
+if [ ! -f "$1" ]; then
+	echo "$(basename "$1") is not a valid file"
+	exit 1;
+fi
+}
 
 #TODO controlla il parametro $1
-new_ssh_key=1
-if [ ! -d ~/opt/fastflow/.ssh ]; then																		# se non e' una directory stampo un errore
+
+if [ ! -d ~/opt/fastflow/.ssh ]; then
 	mkdir -p ~/opt/fastflow/.ssh
 	chmod 700 ~/opt/fastflow/.ssh
 fi
 cd ~/opt/fastflow/.ssh
-if [ -f ff_key ] && [ -f ff_key.pub ]; then
-	new_ssh_key=0
-else
+if ! [ -f ff_key ] || ! [ -f ff_key.pub ]; then
 	rm -f ff_key ff_key.pub
-	ssh-keygen -f ff_key -t rsa -N ""
-fi
-#Because we just want to run some command then exit , so no pseudo-terminal is required
-#that’s why we can use this option (-T) to disable pseudo-terminal allocation.
-#OR call ssh with bash command
-if ! ssh -i ~/opt/fastflow/.ssh/ff_key "$1" bash << ENDSSH
-	exit
-ENDSSH
-then
-	echo "  Insert password to achieve direct connection"
-	ssh-copy-id -i ~/opt/fastflow/.ssh/ff_key.pub "$1" &>/dev/null #TODO fix per indirizzo hostname
+	ssh-keygen -f ff_key -t rsa -N "" &>/dev/null
 fi
 
-cd "$working_dir"
-if [ ! -d $(dirname "$2") ]; then																		# se non e' una directory stampo un errore
-	echo "$(dirname "$2") is not an existing directory"
+ssh-copy-id -i ~/opt/fastflow/.ssh/ff_key.pub "$1" &>/dev/null
+if [ $? = 1 ]; then
 	exit 1;
 fi
-if [ ! -d $(dirname "$3") ]; then																		# se non e' una directory stampo un errore
-	echo "$(dirname "$3") is not an existing directory"
-	exit 1;
+if [ $num_args = 1 ]; then
+	exit 0;
+fi
+
+check_dir $2 $working_dir
+check_dir $3 $working_dir
+check_dir $4 $working_dir
+if [ $num_args -ge 5 ]; then
+	check_dir $5 $working_dir #TODO forse non serve il 5 perche e' come il 6
+	#TODO le dir degli altri files
 fi
 
 cd $(dirname "$2")
-dffrun_path=$(pwd)/$(basename "$2")
+path_dffrun=$(pwd)/$(basename "$2")
 cd "$working_dir"
 cd $(dirname "$3")
-exec_path=$(pwd)/$(basename "$3")
+path_exec=$(pwd)/$(basename "$3")
+cd "$working_dir"
+cd $(dirname "$4")
+path_JSON=$(pwd)/$(basename "$4")
 
-#TODO se e' la prima volta scp senno' rsynk (dovrebbe essere piu veloce scp se non ho nulla di gia inserito)
+check_file $path_dffrun
+check_file $path_exec
+check_file $path_JSON
+#TODO controllo che i files esistano (5,6,7,8...) ORA POTEVO controllare solo questo senza la directory?
+
+#OTTIMIZZAZIONE se e' la prima volta scp senno' rsynk (dovrebbe essere piu veloce scp se non ho nulla di gia inserito)
 #faccio un oggetto per volta o tutto insieme una volta copiato tutto in un posto?
 quit=0
-ldd "$dffrun_path" &>/dev/null
+ldd "$path_dffrun" &>/dev/null
 if [ $? != 0 ]; then
 	echo "Problem about $2"
 	quit=1
 fi
-ldd "$exec_path" &>/dev/null
+ldd "$path_exec" &>/dev/null
 if [ $? != 0 ]; then
 	echo "Problem about $3"
 	quit=1
 fi
 if [ $quit != 0 ]; then
 	echo
-	echo "usage: ./$(basename "$0") [user@]hostname path_of_dffrun path_of_executable [files_for_executable]"
+	echo "usage: ./$(basename "$0") [user@]hostname [path_dffrun path_executable path_JSONconfig [file_needed...]]"
 	exit 1
 fi
+
 ssh -i ~/opt/fastflow/.ssh/ff_key "$1" "mkdir -p ~/opt/fastflow/lib"
 ldd /bin/bash | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e "ssh -i ~/opt/fastflow/.ssh/ff_key" '{}' "$1":~/opt/fastflow/lib/
-ldd "$dffrun_path" | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e "ssh -i ~/opt/fastflow/.ssh/ff_key" '{}' "$1":~/opt/fastflow/lib/
-ldd "$exec_path" | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e "ssh -i ~/opt/fastflow/.ssh/ff_key" '{}' "$1":~/opt/fastflow/lib/
-
-#TODO passare anche i file necessari all'esecuzione
+ldd "$path_dffrun" | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e "ssh -i ~/opt/fastflow/.ssh/ff_key" '{}' "$1":~/opt/fastflow/lib/
+ldd "$path_exec" | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e "ssh -i ~/opt/fastflow/.ssh/ff_key" '{}' "$1":~/opt/fastflow/lib/
+rsync -vL -e "ssh -i ~/opt/fastflow/.ssh/ff_key" $path_dffrun "$1":~/opt/fastflow/
+rsync -vL -e "ssh -i ~/opt/fastflow/.ssh/ff_key" $path_exec "$1":~/opt/fastflow/
+rsync -vL -e "ssh -i ~/opt/fastflow/.ssh/ff_key" $path_JSON "$1":~/opt/fastflow/
+#TODO passare anche gli altri file necessari
