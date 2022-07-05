@@ -1,7 +1,13 @@
 #!/bin/bash
+if [ -z ${DEBUG+x} ]; then
 DEBUG=1
+fi
+if [ -z ${INJECT+x} ]; then
 INJECT=0
+fi
+if [ -z ${RESTORE+x} ]; then
 RESTORE=0
+fi
 
 if [ $# -ne 2 ]; then																		# se il numero di argomenti non e' 2
 	echo "usage: ./$(basename "$0") dir-fastflow dir-cereal"							# stampo il comando d'uso (nomescript nomedirectory)
@@ -117,7 +123,7 @@ echo "${yellow}It might take a while, do you want to use make command for all te
 echo "Alternatively, follow the instructions in .\\Workflow${reset}"
 read yn
 cd fastflow/ff/distributed/loader
-if [ $INJECT = 1 ]; then #TODO aggiungere anche i vari script che usa il dff_run
+if [ $INJECT = 1 ]; then #TODO aggiungere anche i vari script che usa il dff_run (tipo inheritance.sh)
 	echo
 	echo "-Injection"
 	if [ -f "$inject_file" ]; then
