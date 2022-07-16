@@ -1,26 +1,26 @@
-# Per compilare utilizziamo i Makefile come descritto
-# Per le cartelle all'interno di tests/distributed copiare il Makefile all'interno delle cartelle e compilare come il resto dei tests
+# To compile we use the Makefiles as described
+# For the folders inside tests/distributed copy the Makefile inside the folders and compile like the rest of the tests
 # (CXX=g++-10 make DEBUG=1 EXCLUDE_MPI=1 dwordcountb) <- /dwordcount
 
-### Questa parte puo essere anche lanciata dallo script
+### This part can also be run from the script
  cd .../fastflow/tests/distributed/
  CXX=g++-10 make
- # Alternativamente possiamo aggiungere direttamente CXX=g++-10 al Makefile
- # (genera gli eseguibili dei test)
+ # Alternatively we can directly add CXX=g++-10 to the Makefile
+ # (generates tests executables)
 ###
 
-#Per lanciare un eseguibile utilizziamo dff_run insieme con il programma compilato che usa fastflow e il relativo file json
+# To run an executable we use dff_run together with the compiled program that uses fastflow and the related json file
 # -V = Verbose
 # -f = path for json file
  .../dff_run -V -f .../config_of_application.json .../application
 
-# Per esempio dalla cartella fastflow/tests/distributed lanciamo gli eseguibili (dopo averlo creato con il make)
+# For example from the fastflow/tests/distributed folder we launch the executables (after creating it with make)
  ../../ff/distributed/loader/dff_run -V -f ./test_group<?>.json ./test_group<?>
-# Per esempio dalla cartella fastflow/tests/distributed/dwordcount lanciamo l'eseguibile che analizza un file specifico (dopo averlo creato con il make)
+# For example from the fastflow/tests/distributed/dwordcount folder we launch the executable that analyzes a specific file (after creating it with make)
  ../../../ff/distributed/loader/dff_run -V -f ./dwordcount.json ./dwordcountb -f ./testo.txt -p 1,1 -t 1 -b 10
-# Nel file .json, relativo all'eseguibile, troviamo i parametri di settaggio per dff_run
+# In the .json file, relating to the executable, we find the setting parameters for dff_run
 
-#Se vogliamo controllare gli eseguibili step-by-step possiamo usare gdb con il comando
+# If we want to check the executables step-by-step we can use gdb with this command
  gdb --args .../dff_run -V -f .../config_of_application.json .../application
 
 ### '...' notation representing a generic path
