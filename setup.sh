@@ -104,17 +104,19 @@ check_error $? "git pull"
 cd ..
 ###
 #Dettagli su gcc a https://gcc.gnu.org/projects/cxx-status.html
-uname -s | grep Linux &>/dev/null															# Check the kernel
-if [ $? = 0 ]; then
-	ppa=ubuntu-toolchain-r/test
-	sudo add-apt-repository -yu ppa:${ppa}
-#	check_error $? "adding the ppa:${ppa}(Personal Packet Archive)"
-	sudo apt-get -y install gcc-10
-	check_error $? "installing gcc-10"
-	sudo apt-get -y install g++-10
-	check_error $? "installing g++-10"
-else
-	echo "${yellow}Check for Kernel${reset}"
+if [ $INJECT != 1 ] && [ $RESTORE != 1 ]; then
+	uname -s | grep Linux &>/dev/null															# Check the kernel
+	if [ $? = 0 ]; then
+		ppa=ubuntu-toolchain-r/test
+		sudo add-apt-repository -yu ppa:${ppa}
+	#	check_error $? "adding the ppa:${ppa}(Personal Packet Archive)"
+		sudo apt-get -y install gcc-10
+		check_error $? "installing gcc-10"
+		sudo apt-get -y install g++-10
+		check_error $? "installing g++-10"
+	else
+		echo "${yellow}Check for Kernel${reset}"
+	fi
 fi
 ###
 export FF_HOME="$dir_ff/$ff"
@@ -136,7 +138,7 @@ if [ $INJECT = 1 ]; then
 	fi
 	if [ -f "$inject_inheritance" ]; then
 		mv -fv ./inheritance.sh ./inheritance.sh.old
-		cp -pfv "$inject_inheritance"														# Use the -p flag to preserve file permissions
+		cp -pfv "$inject_inheritance" .														# Use the -p flag to preserve file permissions
 		echo "${green}DONE${reset}"
 	else
 		echo "${red}NO FILE(inheritance.sh) TO INJECT${reset}"

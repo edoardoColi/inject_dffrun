@@ -81,6 +81,9 @@ struct G {
 
     void run(){
         char b[1024]; // ssh -t // trovare MAX ARGV
+        int flags = fcntl(fd, F_GETFL, 0); 
+
+ /*
         //###Uno
         sprintf(b,"gnome-terminal");
        std::cout << "Executing the following command: " << b << std::endl;
@@ -92,12 +95,11 @@ struct G {
             exit(1);
         }
 
-        int flags = fcntl(fd, F_GETFL, 0); 
         flags |= O_NONBLOCK; 
         fcntl(fd, F_SETFL, flags);
-
+*/
         //### Due
-        sprintf(b, " %s %s %s %s %s --DFF_Config=%s --DFF_GName=%s %s 2>&1 %s", (isRemote() ? "ssh -T " : ""), (isRemote() ? host.c_str() : ""), (isRemote() ? "'" : ""), this->preCmd.c_str(),  executable.c_str(), configFile.c_str(), this->name.c_str(), toBePrinted(this->name) ? "" : "> /dev/null", (isRemote() ? "'" : ""));
+        sprintf(b, " %s %s %s %s %s --DFF_Config=%s --DFF_GName=%s %s 2>&1 %s", (isRemote() ? "ssh -i ~/opt/fastflow/.ssh/ff_key -T " : ""), (isRemote() ? host.c_str() : ""), (isRemote() ? "'" : ""), this->preCmd.c_str(),  "~/opt/fastflow/test_group1", "~/opt/fastflow/test_group1.json", this->name.c_str(), toBePrinted(this->name) ? "" : "> /dev/null", (isRemote() ? "'" : ""));
        std::cout << "Executing the following command: " << b << std::endl;
         file = popen(b, "r");
         fd = fileno(file);
