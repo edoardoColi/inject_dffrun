@@ -2,8 +2,8 @@
 if [ -z ${CHECK+x} ]; then
 CHECK=1																										# Check that the files and their respective paths are correct
 fi
-if [ -z ${DL+x} ]; then
-DL=1																										# Diamic Libraries are passed
+if [ -z ${LD+x} ]; then
+LD=1																										# Dinamic Libraries are passed
 fi
 if [ -z ${FILE+x} ]; then
 FILE=1																										# "file_needed" are passed
@@ -115,7 +115,7 @@ if [ $? != 0 ]; then
 	exit 1
 fi
 
-if [ $DL = 1 ]; then
+if [ $LD = 1 ]; then
 	ssh -i ~/opt/fastflow/.ssh/ff_key "$1" "mkdir -p ~/opt/fastflow/lib"									# Check the dependencies of the executables and move them to the specified node
 	ldd /bin/bash | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e "ssh -i ~/opt/fastflow/.ssh/ff_key" '{}' "$1":~/opt/fastflow/lib/
 	ldd "$path_exec" | grep "=> /" | awk '{print $3}' | xargs -I '{}' rsync -rvLE -e "ssh -i ~/opt/fastflow/.ssh/ff_key" '{}' "$1":~/opt/fastflow/lib/

@@ -1,24 +1,6 @@
-/* ***************************************************************************
- *
- *  FastFlow is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU Lesser General Public License version 3 as
- *  published by the Free Software Foundation.
- *  Starting from version 3.0.1 FastFlow is dual licensed under the GNU LGPLv3
- *  or MIT License (https://github.com/ParaGroup/WindFlow/blob/vers3.x/LICENSE.MIT)
- *
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
- *  License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public License
- *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- ****************************************************************************
- */
 /* Author: 
  *   Nicolo' Tonci
+ *   Edoardo Coli
  */
 
 #include <iostream>
@@ -40,10 +22,6 @@
 
 #include <filesystem>
 namespace n_fs = std::filesystem;
-
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
 
 enum Proto {TCP = 1 , MPI};
 
@@ -103,8 +81,11 @@ struct G {
 
     void run(){
         char b[1024]; // ssh -t // trovare MAX ARGV
-        
-        sprintf(b, " %s %s %s %s %s --DFF_Config=%s --DFF_GName=%s %s 2>&1 %s", (isRemote() ? "ssh -T " : ""), (isRemote() ? host.c_str() : ""), (isRemote() ? "'" : ""), this->preCmd.c_str(),  executable.c_str(), configFile.c_str(), this->name.c_str(), toBePrinted(this->name) ? "" : "> /dev/null", (isRemote() ? "'" : ""));
+        int flags = fcntl(fd, F_GETFL, 0); 
+
+ /*
+        //###Uno
+        sprintf(b,"gnome-terminal");
        std::cout << "Executing the following command: " << b << std::endl;
         file = popen(b, "r");
         fd = fileno(file);
@@ -114,7 +95,20 @@ struct G {
             exit(1);
         }
 
-        int flags = fcntl(fd, F_GETFL, 0); 
+        flags |= O_NONBLOCK; 
+        fcntl(fd, F_SETFL, flags);
+*/
+        //### Due
+        sprintf(b, " %s %s %s %s %s --DFF_Config=%s --DFF_GName=%s %s 2>&1 %s", (isRemote() ? "ssh -i ~/opt/fastflow/.ssh/ff_key -T " : ""), (isRemote() ? host.c_str() : ""), (isRemote() ? "'" : ""), this->preCmd.c_str(),  "~/opt/fastflow/test_group1", "~/opt/fastflow/test_group1.json", this->name.c_str(), toBePrinted(this->name) ? "" : "> /dev/null", (isRemote() ? "'" : ""));
+       std::cout << "Executing the following command: " << b << std::endl;
+        file = popen(b, "r");
+        fd = fileno(file);
+        
+        if (fd == -1) {
+            printf("Failed to run command\n" );
+            exit(1);
+        }
+
         flags |= O_NONBLOCK; 
         fcntl(fd, F_SETFL, flags);
     }
@@ -141,15 +135,13 @@ static inline void usage(char* progname) {
 		
 }
 
-std::string generateRankFile(std::vector<G>& parsedGroups){
-    std::string name = "/tmp/dffRankfile" + std::to_string(getpid());
+std::string generateHostFile(std::vector<G>& parsedGroups){
+    std::string name = "/tmp/dffHostfile" + std::to_string(getpid());
 
     std::ofstream tmpFile(name, std::ofstream::out);
-    
-    for(size_t i = 0; i < parsedGroups.size(); i++)
-        tmpFile << "rank " << i << "=" << parsedGroups[i].host << " slot=0\n";
-    /*for (const G& group : parsedGroups)
-        tmpFile << group.host << std::endl;*/
+  
+    for (const G& group : parsedGroups)
+        tmpFile << group.host << std::endl;
 
     tmpFile.close();
     // return the name of the temporary file just created; remember to remove it after the usage
@@ -306,13 +298,13 @@ int main(int argc, char** argv) {
     }
 
     if (usedProtocol == Proto::MPI){
-        std::string rankFile = generateRankFile(parsedGroups);
-        std::cout << "RankFile: " << rankFile << std::endl;
-        // invoke mpirun using the just created rankfile
+        std::string hostFile = generateHostFile(parsedGroups);
+        std::cout << "Hostfile: " << hostFile << std::endl;
+        // invoke mpirun using the just created hostfile
 
         char command[350];
      
-        sprintf(command, "mpirun -np %lu --rankfile %s %s --DFF_Config=%s", parsedGroups.size(), rankFile.c_str(), executable.c_str(), configFile.c_str());
+        sprintf(command, "mpirun -np %lu --hostfile %s --map-by node %s --DFF_Config=%s", parsedGroups.size(), hostFile.c_str(), executable.c_str(), configFile.c_str());
 
 		std::cout << "mpicommand: " << command << "\n";
 		
@@ -331,7 +323,7 @@ int main(int argc, char** argv) {
 
         pclose(fp);
 
-        std::remove(rankFile.c_str());
+        //std::remove(hostFile.c_str());
     }
     
     

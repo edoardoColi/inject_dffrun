@@ -2,7 +2,7 @@
 if [ -z ${DEBUG+x} ]; then
 DEBUG=1																						# Enable the debug in Makefile compilation
 fi
-if [ -z ${INJECT+x} ]; then																	# If 1 Replace "inheritance.sh" and "dff_run.ccp" FastFlow original one with the costumized one
+if [ -z ${INJECT+x} ]; then																	# If 1 Replace "inherit.sh" and "dff_run.ccp" FastFlow original one with the costumized one
 INJECT=0
 fi
 if [ -z ${RESTORE+x} ]; then																# If 1 Restore official FastFlow "dff_run.cpp"
@@ -37,7 +37,7 @@ fi
 }
 
 inject_file="$(pwd)/$(dirname $0)/dff_run.cpp"
-inject_inheritance="$(pwd)/$(dirname $0)/inheritance.sh"
+inject_inherit="$(pwd)/$(dirname $0)/inherit.sh"
 tmp=$(pwd)
 cd "$1"
 dir_ff=$(pwd)
@@ -136,12 +136,12 @@ if [ $INJECT = 1 ]; then
 	else
 		echo "${red}NO FILE(dff_run.cpp) TO INJECT${reset}"
 	fi
-	if [ -f "$inject_inheritance" ]; then
-		mv -fv ./inheritance.sh ./inheritance.sh.old
-		cp -pfv "$inject_inheritance" .														# Use the -p flag to preserve file permissions
+	if [ -f "$inject_inherit" ]; then
+		mv -fv ./inherit.sh ./inherit.sh.old
+		cp -pfv "$inject_inherit" .														# Use the -p flag to preserve file permissions
 		echo "${green}DONE${reset}"
 	else
-		echo "${red}NO FILE(inheritance.sh) TO INJECT${reset}"
+		echo "${red}NO FILE(inherit.sh) TO INJECT${reset}"
 	fi
 fi
 if [ $RESTORE = 1 ]; then
