@@ -178,7 +178,7 @@ else
 	fi
 fi
 
-gnome-terminal &>/dev/null																	# Exported setted variables in the child process
+#gnome-terminal &>/dev/null																	# Exported setted variables in the child process
 echo "${yellow}Remind to set variables like this:"											# Reminder for the parent process
 echo "  export FF_HOME=$dir_ff/$ff"
 echo "  export CEREAL_HOME=$dir_cereal/$cereal/include${reset}"

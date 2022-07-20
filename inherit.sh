@@ -105,8 +105,6 @@ if [ $CHECK = 1 ]; then
 	done
 fi
 
-#OTTIMIZZAZIONE se e' la prima volta scp senno' rsynk (dovrebbe essere piu veloce scp se non ho nulla di gia inserito)
-#faccio un oggetto per volta o tutto insieme una volta copiato tutto in un posto?
 ldd "$path_exec" &>/dev/null																				# An executable with dynamic libraries was not specified
 if [ $? != 0 ]; then
 	echo "Problem about $2"
