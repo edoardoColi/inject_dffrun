@@ -80,7 +80,7 @@ struct G {
         }
     }
 
-    void run(){
+void run(){
     char a[1024]; // ssh -t // trovare MAX ARGV
     char b[1024]; // ssh -t // trovare MAX ARGV
     std::string name_exec;
@@ -110,7 +110,7 @@ struct G {
         (isRemote() ? host.c_str() : ""),                                  // hostname like json ("endpoint" : "ff@192.168.253.163:8004",) better inserto user@host instead of just host
         (isRemote() ? executable.c_str() : ""),                            // Path like in initial command
         (isRemote() ? configFile.c_str() : ""),                            // Path like in initial command
-        (isRemote() ? more_files.c_str() : ""));                         // List of other files initially passed and needed by executable
+        (isRemote() ? more_files.c_str() : ""));                           // List of other files initially passed and needed by executable
 
     if (isRemote()) std::cout << "Executing the following pre-command:  " << a << std::endl;
     std::cout << "Executing the following command:     " << b << "\n" << std::endl;
@@ -118,7 +118,7 @@ struct G {
     if (isRemote()){
         file = popen(a, "r");
         fd = fileno(file);
-        if (fd == -1) {
+        if (fd == -1) { //TODO controlla i valori di fail
             printf("Failed to run command\n" );
             exit(1);
         }
